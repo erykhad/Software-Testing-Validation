@@ -1,0 +1,12 @@
+{
+  "name": "@shopping/perf",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "seed": "node seed.mjs",
+    "smoke": "k6 run smoke.js",
+    "load": "k6 run load.js",
+    "stress": "k6 run stress.js",
+    "test": "bash run.sh"
+  }
+}

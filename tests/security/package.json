@@ -1,0 +1,12 @@
+{
+  "name": "@shopping/security",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "zap": "bash ./zap-baseline.sh"
+  },
+  "devDependencies": {
+    "vitest": "^4.1.11"
+  }
+}

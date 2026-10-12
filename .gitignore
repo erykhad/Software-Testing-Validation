@@ -1,0 +1,14 @@
+node_modules
+dist
+*.local
+.DS_Store
+apps/api/data
+tests/perf/seed-output.json
+test-results
+playwright-report
+blob-report
+playwright/.cache
+.pnpm-store
+*.tsbuildinfo
+coverage
+.env

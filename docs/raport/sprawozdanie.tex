@@ -1,0 +1,966 @@
+\documentclass[a4paper,11pt]{article}
+
+% --- Dane na stronę tytułową ---------------------------------------------
+\newcommand{\autor}{Eryk Hadała}
+\newcommand{\grupa}{Grupa laboratoryjna 1}
+\newcommand{\prowadzacy}{dr inż. Grzegorz Rogus}
+\newcommand{\datadokumentu}{26 października 2026}
+
+% --- Język i czcionki -----------------------------------------------------
+\usepackage{fontspec}
+\usepackage[polish]{babel}
+\setmainfont{texgyrepagella}[
+  Extension=.otf,
+  UprightFont=*-regular,
+  BoldFont=*-bold,
+  ItalicFont=*-italic,
+  BoldItalicFont=*-bolditalic]
+\setsansfont{texgyreheros}[
+  Extension=.otf,
+  UprightFont=*-regular,
+  BoldFont=*-bold,
+  ItalicFont=*-italic,
+  BoldItalicFont=*-bolditalic]
+\setmonofont{lmmono10-regular.otf}[Scale=0.95]
+\usepackage{csquotes}
+\usepackage{microtype}
+
+% --- Układ strony ---------------------------------------------------------
+\usepackage[a4paper,top=2.5cm,bottom=2.5cm,left=2.3cm,right=2.3cm,headheight=22pt]{geometry}
+\usepackage{xcolor}
+\definecolor{accent}{HTML}{2F5D50}
+\definecolor{accentlight}{HTML}{E8F0EC}
+\definecolor{muted}{HTML}{5F6B66}
+\definecolor{ok}{HTML}{2E7D32}
+\definecolor{warn}{HTML}{B26A00}
+\definecolor{bad}{HTML}{B3261E}
+
+\usepackage{titlesec}
+\titleformat{\part}[display]
+  {\sffamily\bfseries\color{accent}\centering}
+  {\Large\MakeUppercase{\partname}~\thepart}{0.6em}{\Huge}
+\titleformat{\section}{\sffamily\Large\bfseries\color{accent}}{\thesection}{0.8em}{}
+\titleformat{\subsection}{\sffamily\large\bfseries}{\thesubsection}{0.8em}{}
+\titleformat{\subsubsection}{\sffamily\normalsize\bfseries\color{muted}}{\thesubsubsection}{0.8em}{}
+\titlespacing*{\section}{0pt}{1.6em}{0.7em}
+
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\sffamily\small\color{muted}Listy zakupów — plan i raport z testów}
+\fancyhead[R]{\sffamily\small\color{muted}\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\headrule}{\hbox to\headwidth{\color{accent!40}\leaders\hrule height \headrulewidth\hfill}}
+
+\usepackage{enumitem}
+\setlist{itemsep=0.25em,topsep=0.4em}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.55em}
+
+% --- Tabele, wykresy, ramki -----------------------------------------------
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{xltabular}
+\usepackage{multirow}
+\usepackage{colortbl}
+\usepackage{float}
+\usepackage{caption}
+\captionsetup{font=small,labelfont={sf,bf,color=accent},skip=6pt}
+\renewcommand{\arraystretch}{1.25}
+\newcolumntype{L}{>{\raggedright\arraybackslash}X}
+\newcolumntype{C}{>{\centering\arraybackslash}X}
+
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18,
+  /pgf/number format/use comma,
+  /pgf/number format/1000 sep={\,},
+  legend style={/tikz/every even column/.append style={column sep=10pt}},
+  every axis legend/.append style={font=\small}}
+
+\usepackage[most]{tcolorbox}
+\newtcolorbox{werdykt}[1][]{colback=accentlight,colframe=accent,boxrule=0.6pt,
+  arc=2pt,left=8pt,right=8pt,top=6pt,bottom=6pt,fonttitle=\sffamily\bfseries,title={#1}}
+\newtcolorbox{uwaga}{colback=white,colframe=warn,boxrule=0.6pt,arc=2pt,
+  left=8pt,right=8pt,top=5pt,bottom=5pt}
+
+\usepackage[hidelinks]{hyperref}
+\hypersetup{colorlinks=true,linkcolor=accent,urlcolor=accent,
+  pdftitle={Listy zakupów — plan testów i raport z testów},pdfauthor={\autor}}
+
+% --- Skróty ---------------------------------------------------------------
+\newcommand{\code}[1]{\texttt{\small #1}}
+\newcommand{\zal}{\textcolor{ok}{\textbf{zaliczony}}}
+\newcommand{\pass}{\textcolor{ok}{\textbf{OK}}}
+\newcommand{\sev}[1]{\textsf{\small\bfseries #1}}
+\newcommand{\wysoki}{\textcolor{bad}{\sev{wysoki}}}
+\newcommand{\sredni}{\textcolor{warn}{\sev{średni}}}
+\newcommand{\niski}{\textcolor{accent}{\sev{niski}}}
+\newcommand{\info}{\textcolor{muted}{\sev{informacyjny}}}
+\newcommand{\plik}[1]{\multicolumn{4}{@{}l}{\cellcolor{accentlight}\textsf{\footnotesize\color{accent} #1}}\\}
+
+% Tabela przypadków testowych: ID | przypadek | dane | oczekiwany wynik
+\newenvironment{przypadki}
+  {\footnotesize
+   \xltabular{\textwidth}{@{}>{\sffamily\bfseries\color{accent}}p{1.15cm} L L L@{}}
+   \toprule
+   \textcolor{black}{ID} & \textsf{\textbf{Przypadek}} & \textsf{\textbf{Dane wejściowe}} & \textsf{\textbf{Oczekiwany wynik}}\\
+   \midrule
+   \endfirsthead
+   \toprule
+   \textcolor{black}{ID} & \textsf{\textbf{Przypadek}} & \textsf{\textbf{Dane wejściowe}} & \textsf{\textbf{Oczekiwany wynik}}\\
+   \midrule
+   \endhead
+   \bottomrule
+   \endfoot}
+  {\endxltabular}
+
+\begin{document}
+
+% =========================================================================
+\hypersetup{pageanchor=false}
+\begin{titlepage}
+  \sffamily
+  \vspace*{2.5cm}
+  {\color{accent}\rule{\linewidth}{1.2pt}}\par\vspace{0.8cm}
+  {\large\color{muted} Laboratorium Testowania Oprogramowania}\par\vspace{0.5cm}
+  {\fontsize{30}{36}\selectfont\bfseries\color{accent} Listy zakupów}\par\vspace{0.4cm}
+  {\LARGE Plan testów i raport z testów}\par\vspace{0.8cm}
+  {\color{accent}\rule{\linewidth}{1.2pt}}\par
+  \vspace{1.2cm}
+  \begin{tabular}{@{}ll@{}}
+    \textcolor{muted}{Autor:} & \autor \\
+    \textcolor{muted}{Grupa:} & \grupa \\
+    \textcolor{muted}{Prowadzący:} & \prowadzacy \\
+    \textcolor{muted}{Data:} & \datadokumentu \\
+    \textcolor{muted}{Wersja aplikacji:} & 0.1.0 (gałąź \code{main}, stan roboczy)
+  \end{tabular}
+  \vfill
+  \begin{tcolorbox}[colback=accentlight,colframe=accentlight,arc=2pt,left=10pt,right=10pt]
+    \small
+    Dokument składa się z dwóch części. \textbf{Plan testów} opisuje środowisko, narzędzia,
+    przypadki testowe pięciu poziomów oraz dane testowe wraz z uzasadnieniem ich wyboru.
+    \textbf{Raport z testów} zawiera wyniki wykonania, audyt bezpieczeństwa, analizę
+    i zalecenia dla zespołu developerskiego.
+  \end{tcolorbox}
+\end{titlepage}
+\hypersetup{pageanchor=true}
+
+\tableofcontents
+\clearpage
+
+% =========================================================================
+\part{Plan testów}
+% =========================================================================
+
+\section{Wprowadzenie}
+
+\subsection{Cel dokumentu}
+Plan określa, co, czym i na jakich danych jest testowane w aplikacji \enquote{Listy zakupów}.
+Każdy przypadek ma identyfikator, z którego korzysta część raportowa:
+\textbf{TJ} — testy jednostkowe, \textbf{TI} — integracyjne, \textbf{TS} — systemowe,
+\textbf{TW} — wydajnościowe, \textbf{TB} — bezpieczeństwa.
+
+\subsection{Przedmiot testów}
+Aplikacja webowa dostępna wyłącznie po zalogowaniu. Użytkownik zakłada konto, tworzy listy
+zakupów z sugerowaną datą i dodaje pozycje. Listę można udostępnić innej osobie, która może
+jedynie zmieniać status pozycji. Frontend: React, Vite, shadcn/ui. Backend: Node.js, Hono,
+SQLite z ręcznie pisanymi zapytaniami parametryzowanymi. Zdjęcia pozycji są zapisywane w bazie
+jako BLOB.
+
+\begin{table}[H]
+\centering\small
+\begin{tabularx}{\textwidth}{@{}>{\sffamily\bfseries\color{accent}}l L@{}}
+\toprule
+\textcolor{black}{ID} & \textsf{\textbf{Wymaganie}}\\
+\midrule
+R1 & Rejestracja, logowanie i wylogowanie. Bez sesji aplikacja i API są niedostępne.\\
+R2 & Pełny CRUD list zakupów. Każda lista ma opcjonalną sugerowaną datę zakupów.\\
+R3 & Pozycja ma nazwę wpisaną ręcznie albo wybraną z popularnych produktów (chleb, mleko, woda, ser…), ilość dodatnią i jednostkę z listy \code{szt}, \code{g}, \code{kg}, \code{ml}, \code{l}, \code{opak}.\\
+R4 & Pozycja może mieć zdjęcie referencyjne JPEG, PNG lub WebP do 2~MB.\\
+R5 & Pozycja kupiona jest na liście przekreślona.\\
+R6 & Właściciel udostępnia listę po adresie e-mail. Osoba ze współdzielenia zmienia tylko status, bez dodawania, usuwania i zmiany ilości.\\
+R7 & Listy, pozycje, zdjęcia i statusy są trwale zapisane w bazie.\\
+R8 & Wymagania niefunkcjonalne: p95 czasu odpowiedzi poniżej 300~ms, mniej niż 1\% błędów, brak podatności o wadze wysokiej.\\
+\bottomrule
+\end{tabularx}
+\caption{Wymagania objęte testami}
+\label{tab:wymagania}
+\end{table}
+
+\subsection{Metodyka}
+Aplikacja powstaje metodyką \textbf{TDD} w cyklu czerwony — zielony — refaktor. Najpierw
+powstaje test opisujący jedną regułę i pada, potem najmniejszy kod, który go spełnia, na
+końcu porządkowanie przy zielonym teście. Cykle zaczynają się od reguł domeny bez bazy i HTTP,
+przechodzą przez API na bazie w pamięci, a kończą na komponentach interfejsu. Test systemowy
+w przeglądarce jest testem akceptacyjnym całej ścieżki. Testy wydajności, testy bezpieczeństwa
+i skan DAST badają złożoną aplikację i nie są krokiem wewnętrznego cyklu TDD.
+
+\begin{table}[H]
+\centering\small
+\begin{tabularx}{\textwidth}{@{}l >{\raggedright\arraybackslash}p{3.1cm} L >{\raggedright\arraybackslash}p{4.3cm}@{}}
+\toprule
+\textsf{\textbf{Poziom}} & \textsf{\textbf{Narzędzie}} & \textsf{\textbf{Zakres}} & \textsf{\textbf{Polecenie}}\\
+\midrule
+Jednostkowy & Vitest, Testing Library & reguły domeny, komponenty React & \code{pnpm test:unit}\\
+Integracyjny & Vitest, \code{app.request()} & trasa HTTP $\rightarrow$ serwis $\rightarrow$ repozytorium $\rightarrow$ SQLite & \code{pnpm test:integration}\\
+Systemowy & Playwright, Chromium & cała aplikacja w przeglądarce, dwóch użytkowników & \code{pnpm test:e2e}\\
+Wydajnościowy & k6 & logowanie, odczyt list, zmiana statusu pod obciążeniem & \code{pnpm test:perf}\\
+Bezpieczeństwa & Vitest, pnpm audit, OWASP ZAP & ataki na API, zależności, skan pasywny & \code{pnpm test:security}\newline\code{pnpm test:zap}\\
+\bottomrule
+\end{tabularx}
+\caption{Poziomy testów i narzędzia}
+\end{table}
+
+% -------------------------------------------------------------------------
+\section{Środowisko testowe i narzędzia}
+
+\subsection{Sprzęt i system}
+\begin{table}[H]
+\centering\small
+\begin{tabularx}{\textwidth}{@{}l L@{}}
+\toprule
+\textsf{\textbf{Element}} & \textsf{\textbf{Wartość}}\\
+\midrule
+System operacyjny & CachyOS Linux, jądro 6.18.50-2-cachyos-lts, x86\_64\\
+Procesor & 12 wątków\\
+Pamięć RAM & 15 GiB\\
+Sieć & pętla zwrotna \code{127.0.0.1}; klient i serwer działają na tej samej maszynie\\
+Konteneryzacja & Docker 29.9.0 (tylko dla OWASP ZAP)\\
+\bottomrule
+\end{tabularx}
+\caption{Platforma sprzętowa}
+\end{table}
+
+\subsection{Oprogramowanie i narzędzia}
+\begin{table}[H]
+\centering\small
+\begin{tabularx}{\textwidth}{@{}l l L@{}}
+\toprule
+\textsf{\textbf{Narzędzie}} & \textsf{\textbf{Wersja}} & \textsf{\textbf{Rola}}\\
+\midrule
+Node.js & 26.10.0 & środowisko uruchomieniowe API, testów i serwera deweloperskiego\\
+pnpm & 12.10.1 & menedżer pakietów i workspace, uruchamianie skryptów testowych\\
+Hono & 4.13.13 & framework HTTP; \code{app.request()} pozwala testować API bez gniazda sieciowego\\
+better-sqlite3 & 12.11.1 & sterownik SQLite; baza \code{:memory:} w testach, plik WAL w pozostałych środowiskach\\
+Vitest & 4.1.11 & testy jednostkowe, integracyjne i bezpieczeństwa\\
+@vitest/coverage-v8 & 4.1.11 & pomiar pokrycia kodu i egzekwowanie progów\\
+Testing Library & 16.3.3 & render komponentów React i symulacja działań użytkownika\\
+jsdom & 27.4.0 & przeglądarkowe DOM w Node.js dla testów komponentów\\
+Playwright & 1.64.0 & testy systemowe; Chromium build 1248\\
+k6 & 2.3.0 & testy wydajnościowe smoke, load, stress\\
+OWASP ZAP & 2.17.0 & pasywny skan bezpieczeństwa (obraz \code{zaproxy/zap-stable})\\
+pnpm audit & 12.10.1 & audyt znanych podatności w zależnościach\\
+TypeScript & 5.9 & kontrola typów jako dodatkowa bramka jakości\\
+\bottomrule
+\end{tabularx}
+\caption{Oprogramowanie użyte do testów}
+\end{table}
+
+\subsection{Konfiguracja środowisk}
+Każdy poziom testów ma osobną bazę danych, dzięki czemu przebiegi nie wpływają na siebie
+i na dane deweloperskie.
+
+\begin{table}[H]
+\centering\small
+\begin{tabularx}{\textwidth}{@{}l l l L@{}}
+\toprule
+\textsf{\textbf{Środowisko}} & \textsf{\textbf{Adres}} & \textsf{\textbf{Baza}} & \textsf{\textbf{Ustawienia}}\\
+\midrule
+Jednostkowe i integracyjne & brak gniazda & \code{:memory:} & nowa baza na każdy test; limit logowań 1000, ciasteczka bez \code{Secure}\\
+Systemowe & \code{:3000} API, \code{:5173} front & \code{e2e.sqlite} & plik usuwany przed przebiegiem; serwery stawia Playwright\\
+Wydajnościowe & \code{:3099} & \code{perf.sqlite} & plik tworzony od zera; \code{LOGIN\_RATE\_LIMIT\_MAX=100000}\\
+Skan ZAP & \code{:3000} & \code{app.sqlite} & kontener w sieci hosta, bo API nasłuchuje tylko na \code{127.0.0.1}\\
+\bottomrule
+\end{tabularx}
+\caption{Konfiguracja środowisk testowych}
+\end{table}
+
+% -------------------------------------------------------------------------
+\section{Kryteria wejścia i wyjścia}
+
+\textbf{Kryteria wejścia:} zależności zainstalowane (\code{pnpm install}), kod przechodzi
+kontrolę typów, dla testów systemowych zainstalowana przeglądarka Chromium, dla testów
+wydajności dostępny k6, dla skanu ZAP działający Docker.
+
+\textbf{Kryteria wyjścia:}
+\begin{enumerate}
+  \item wszystkie przypadki TJ, TI, TS i TB zakończone wynikiem pozytywnym;
+  \item pokrycie kodu nie niższe niż progi zapisane w konfiguracji Vitest:
+        API 90\% instrukcji, 85\% gałęzi, 90\% funkcji, 95\% linii;
+        front 90\% instrukcji, 80\% gałęzi, 90\% funkcji, 90\% linii;
+  \item w scenariuszach TW: p95 czasu odpowiedzi poniżej 300~ms i odsetek błędów poniżej 1\%;
+  \item brak podatności o wadze \emph{high} lub \emph{critical} w \code{pnpm audit};
+  \item brak alertów typu FAIL w skanie OWASP ZAP baseline.
+\end{enumerate}
+
+% -------------------------------------------------------------------------
+\section{Testy jednostkowe — przypadki testowe}
+
+\subsection{Zakres i techniki}
+Testy jednostkowe sprawdzają czystą logikę bez bazy i bez sieci oraz komponenty interfejsu
+w izolacji od backendu (żądania \code{fetch} są zastępowane atrapami). Do projektowania danych
+użyto \textbf{klas równoważności} (poprawna i niepoprawna jednostka), \textbf{wartości
+brzegowych} (ilość 0 i 1\,000\,001, rozmiar zdjęcia 2~MB + 1~bajt, hasło 7 znaków) oraz
+\textbf{tablicy decyzyjnej} dla uprawnień (tabela~\ref{tab:uprawnienia}).
+
+\begin{table}[H]
+\centering\small
+\begin{tabular}{@{}lccc@{}}
+\toprule
+\textsf{\textbf{Działanie}} & \textsf{\textbf{Właściciel}} & \textsf{\textbf{Osoba ze współdzielenia}} & \textsf{\textbf{Obca osoba}}\\
+\midrule
+Podgląd listy & tak & tak & nie (404)\\
+Zmiana statusu pozycji & tak & tak & nie (404)\\
+Dodanie, edycja, usunięcie pozycji & tak & nie (403) & nie (404)\\
+Edycja i usunięcie listy, udostępnianie & tak & nie (403) & nie (404)\\
+\bottomrule
+\end{tabular}
+\caption{Tablica decyzyjna uprawnień (R6)}
+\label{tab:uprawnienia}
+\end{table}
+
+\subsection{Backend — reguły domeny}
+\begin{przypadki}
+\plik{apps/api/src/domain/units.test.ts}
+TJ-01 & Jednostka z listy (R3) & każda z \code{szt}, \code{g}, \code{kg}, \code{ml}, \code{l}, \code{opak}; \code{tona}; pusty napis & jednostki z listy przyjęte, \code{tona} i pusty napis odrzucone\\
+TJ-02 & Wartości brzegowe ilości (R3) & 1; 1,5; 0; $-2$; NaN; $+\infty$; 1\,000\,001 & 1 i 1,5 przyjęte, pozostałe odrzucone\\
+\plik{apps/api/src/domain/schemas.test.ts}
+TJ-03 & Walidacja rejestracji (R1) & hasło \code{haslo1234} (9 znaków); hasło \code{krotkie} (7 znaków) & pierwsze przyjęte, drugie odrzucone\\
+TJ-04 & Data listy (R2) & \code{2026-02-31}; \code{2026-10-12}; pusta zmiana listy & nieistniejąca data i pusta zmiana odrzucone, poprawna data przyjęta\\
+TJ-05 & Schemat pozycji (R3) & ilość \code{"2"} jako tekst z formularza; ilość 0; jednostka \code{tona} & tekst zamieniony na liczbę i przyjęty, pozostałe odrzucone\\
+\plik{apps/api/src/domain/items.test.ts}
+TJ-06 & Kolejność pozycji (R3) & trzy pozycje: pozycja 2; pozycja 1 z lutego; pozycja 1 ze stycznia & kolejność \code{a}, \code{c}, \code{b}: po pozycji, przy remisie po dacie\\
+TJ-07 & Podsumowanie listy (R5) & statusy: kupione, niekupione, kupione & razem 3, kupione 2, pozostało 1\\
+\plik{apps/api/src/domain/rateLimit.test.ts}
+TJ-08 & Okno limitu prób (R8) & limit 2, okno 500~ms; próby w chwilach 1000, 1100, 1200, 1600~ms & dwie pierwsze dozwolone, trzecia zablokowana, czwarta po resecie okna dozwolona\\
+\plik{apps/api/src/domain/image.test.ts}
+TJ-09 & Poprawny PNG (R4) & plik PNG 1$\times$1 piksel, 70~B & przyjęty\\
+TJ-10 & Niepoprawne zdjęcie (R4) & typ \code{text/plain}; bajty \code{01 02 03 04} jako PNG; pusty plik; PNG o rozmiarze 2~MB + 1~B & wszystkie odrzucone z komunikatem\\
+TJ-11 & Podpisy JPEG i WebP (R4) & \code{FF D8 FF}; \code{00 00 00} jako JPEG; nagłówek \code{RIFF…WEBP}; ucięty WebP & poprawne podpisy przyjęte, błędne odrzucone\\
+\plik{apps/api/src/domain/permissions.test.ts}
+TJ-12 & Prawa właściciela (R6) & właściciel listy & może edytować pozycje i zmieniać status\\
+TJ-13 & Prawa osoby ze współdzielenia (R6) & użytkownik z listy udostępnień & zmienia tylko status, edycja zabroniona\\
+TJ-14 & Obca osoba (R6) & użytkownik spoza listy & brak podglądu, edycji i zmiany statusu\\
+\end{przypadki}
+
+\subsection{Frontend — komponenty i logika klienta}
+\begin{przypadki}
+\plik{apps/web/src/components/ItemRow.test.tsx}
+TJ-15 & Przekreślenie kupionej pozycji (R5) & pozycja \code{isPurchased: true} & etykieta ma klasę \code{line-through}\\
+TJ-16 & Widok osoby ze współdzielenia (R6) & \code{canEdit: false} & brak przycisków edycji i usuwania\\
+TJ-17 & Zgłoszenie zmiany statusu (R5) & kliknięcie pola wyboru & \code{onToggle(true)}\\
+\plik{apps/web/src/components/AddItemForm.test.tsx}
+TJ-18 & Dodanie pozycji z domyślną jednostką (R3) & nazwa \code{mleko}, ilość 2 & wysłane \code{\{mleko, 2, szt, bez zdjęcia\}}\\
+TJ-19 & Wybór produktu z podpowiedzi i zdjęcie (R3, R4) & wpis \code{mle}, wybór \code{mleko}, plik PNG & wysłane \code{mleko}, ilość 1 i plik\\
+TJ-20 & Nazwa spoza katalogu (R3) & wpis \code{tofu}, opcja \enquote{Dodaj „tofu”} & wysłana nazwa \code{tofu}\\
+TJ-21 & Pusta nazwa (R3) & wysłanie pustego formularza & brak wysyłki, widoczny komunikat błędu\\
+\plik{apps/web/src/components/ProtectedRoute.test.tsx}
+TJ-22 & Strona chroniona bez sesji (R1) & brak użytkownika & przekierowanie na logowanie\\
+TJ-23 & Strona chroniona z sesją (R1) & zalogowany Jan & widoczna treść list\\
+TJ-24 & Sprawdzanie sesji (R1) & \code{loading: true} & wskaźnik ładowania\\
+TJ-25 & Logowanie dla gościa (R1) & brak użytkownika na \code{/login} & widoczny ekran logowania\\
+TJ-26 & Logowanie przy aktywnej sesji (R1) & zalogowany Jan na \code{/login} & przekierowanie na listy\\
+\plik{apps/web/src/components/DateField.test.tsx}
+TJ-27 & Formatowanie daty (R2) & \code{null}; \code{wtorek}; \code{2026-10-16} & \enquote{Bez daty}; tekst bez zmian; data po polsku\\
+TJ-28 & Wybór daty polem i kalendarzem (R2) & wpis \code{2026-10-20}; kliknięcie dnia w kalendarzu & \code{onChange} wywołane w obu przypadkach\\
+\plik{apps/web/src/components/ShareDialog.test.tsx}
+TJ-29 & Udostępnienie i odebranie dostępu (R6) & e-mail \code{ania@example.com}, przycisk \enquote{Odbierz} & \code{onShare} z adresem, \code{onUnshare('2')}\\
+TJ-30 & Nieudane udostępnienie (R6) & \code{onShare} rzuca błąd & adres zostaje w polu\\
+\plik{apps/web/src/components/AppHeader.test.tsx}
+TJ-31 & Wylogowanie (R1) & kliknięcie \enquote{Wyloguj} & wywołane \code{logout}, przejście na logowanie\\
+\plik{apps/web/src/auth/AuthProvider.test.tsx}
+TJ-32 & Cykl sesji w kliencie (R1) & odpowiedzi \code{me}, \code{login}, \code{register}, \code{logout} & nazwa użytkownika zmienia się po każdym kroku, na końcu gość\\
+TJ-33 & Brak sesji (R1) & \code{/api/auth/me} zwraca 401 & stan gościa\\
+TJ-34 & Użycie poza providerem & render bez \code{AuthProvider} & błąd \enquote{useAuth poza AuthProvider}\\
+\plik{apps/web/src/lib/api.test.ts, apps/web/src/lib/schemas.test.ts}
+TJ-35 & Nagłówek JSON & ciało tekstowe & \code{content-type: application/json}, zwrócone ciało\\
+TJ-36 & Formularz i pusta odpowiedź & \code{FormData}, odpowiedź 204 & brak nadpisanego typu, wynik \code{undefined}\\
+TJ-37 & Obsługa błędów API & 400 z \code{error}; 500 bez JSON & komunikat z serwera; komunikat ogólny\\
+TJ-38 & Schemat pozycji w kliencie (R3) & jednostka \code{tona} & odrzucona\\
+\plik{apps/web/src/pages/auth-pages.test.tsx}
+TJ-39 & Udane logowanie (R1) & \code{jan@example.com} / \code{haslo1234} & wywołane \code{login}, przejście na listy\\
+TJ-40 & Błędne hasło (R1) & \code{login} rzuca \code{ApiError(401)} & widoczny komunikat z serwera\\
+TJ-41 & Pusty formularz logowania (R1) & brak danych & brak wywołania \code{login}\\
+TJ-42 & Udana rejestracja (R1) & Jan, e-mail, hasło 9 znaków & wywołane \code{register}, przejście na listy\\
+TJ-43 & Błąd sieci przy rejestracji (R1) & zwykły \code{Error} & komunikat \enquote{Nie udało się utworzyć konta}\\
+\plik{apps/web/src/pages/lists-flow.test.tsx, apps/web/src/App.test.tsx}
+TJ-44 & Listy własne i udostępnione (R2, R6) & listy \code{Piątek} i \code{Od Ani}, nowa \code{Sobota} & obie sekcje widoczne; po utworzeniu widok nowej, pustej listy\\
+TJ-45 & Pusty stan (R2) & brak list & komunikaty pustych sekcji\\
+TJ-46 & Pełna obsługa listy przez właściciela (R2–R6) & odhaczenie, dodanie \code{chleb}, udostępnienie, zmiana nazwy, edycja i usunięcie pozycji, usunięcie listy & każde działanie wysyła żądanie, na końcu powrót do list\\
+TJ-47 & Błąd wczytania listy & odpowiedź 500 & komunikat \enquote{Nie udało się otworzyć listy.}\\
+TJ-48 & Widok osoby ze współdzielenia (R6) & rola \code{shared}, zmiana statusu kończy się 500 & notka o prawach, brak edycji, interfejs wraca do stanu sprzed zmiany\\
+TJ-49 & Nieznana ścieżka bez sesji (R1) & adres \code{/nie-ma}, \code{me} zwraca 401 & ekran logowania\\
+\end{przypadki}
+
+% -------------------------------------------------------------------------
+\section{Testy integracyjne — przypadki testowe}
+
+Testy integracyjne wysyłają żądania HTTP do aplikacji Hono przez \code{app.request()}.
+Żądanie przechodzi przez middleware (nagłówki, limit rozmiaru, sesja), trasę, serwis
+i repozytorium do prawdziwej bazy SQLite w pamięci z pełnym schematem. Repozytoria nie mają
+osobnych testów: ich zachowanie wymuszają poniższe przypadki.
+
+\begin{przypadki}
+\plik{apps/api/src/integration/auth.test.ts}
+TI-01 & Rejestracja, sesja i wylogowanie (R1) & Jan, \code{jan@example.com}, \code{haslo1234} & 201 i ciasteczko \code{session}; \code{/me} 200; wylogowanie 204; \code{/me} 401\\
+TI-02 & Brak wycieku istnienia konta (R1) & nieznany e-mail; znany e-mail ze złym hasłem & oba 401 z identyczną treścią\\
+TI-03 & Unikalny e-mail bez względu na wielkość liter (R1) & druga rejestracja \code{Jan@example.com} & 409\\
+TI-04 & Wymóg sesji (R1) & \code{GET /api/lists} bez ciasteczka & 401\\
+\plik{apps/api/src/integration/lists.test.ts}
+TI-05 & Pełny CRUD listy i pozycji ze zdjęciem (R2–R5, R7) & lista \code{Zakupy na piątek} 2026-10-16; pozycja \code{mleko} 2~l z PNG w \code{multipart} & 201; zmiana nazwy; zdjęcie zwrócone bajt w bajt z typem \code{image/png}; edycja; status kupione; usunięcie 204; lista 404\\
+TI-06 & Kaskadowe usuwanie (R7) & lista z pozycją \code{chleb} & po usunięciu listy w tabeli \code{items} 0 wierszy\\
+TI-07 & Katalog i jednostki (R3) & \code{/popular-products} bez sesji i z sesją; \code{/units} & 401; lista zawiera \code{chleb}; jednostki dokładnie \code{szt, g, kg, ml, l, opak}\\
+\plik{apps/api/src/integration/sharing.test.ts}
+TI-08 & Prawa osoby ze współdzielenia (R6) & Jan udostępnia listę z pozycją \code{woda} 6~szt Ani & Ania: dodanie, edycja, usunięcie 403; zmiana statusu 200; Jan widzi status kupione i licznik 1\\
+TI-09 & Obca lista i udostępnienie sobie (R6) & Obcy otwiera listę Jana; Jan udostępnia sam sobie & 404; 400\\
+\plik{apps/api/src/integration/edges.test.ts}
+TI-10 & Sprawdzenie stanu i nieznana ścieżka & \code{/api/health}; \code{/api/brak} & \code{\{ok: true\}}; 404\\
+TI-11 & Logowanie i ciasteczko \code{Secure} (R1) & logowanie istniejącego konta przy \code{secureCookies} & 200 i flaga \code{Secure}; wylogowanie bez ciasteczka 204\\
+TI-12 & Złe ciało żądania i limit przez proxy (R1, R8) & ciało \code{null}; JSON \code{\{}; limit 1 i \code{X-Forwarded-For: 10.0.0.8} & 400; 400; druga próba z tego adresu 429\\
+TI-13 & Za duże żądanie i awaria bazy & ciało 3~MB + 1~B; zamknięta baza & 413; 500 z ogólnym komunikatem\\
+TI-14 & Zarządzanie udostępnieniami (R2, R6) & usunięcie daty; udostępnienie nieznanemu; ponowne udostępnienie; odebranie przez Anię i przez Jana & data \code{null}; 404; 409; 403; 204, ponownie 404\\
+TI-15 & Wymiana zdjęcia (R4) & brak zdjęcia; pusty formularz; PNG; usunięcie przez Anię i Jana; zdjęcie 2~MB + 1~B & 404; 400; \code{hasImage: true}; 403; 204; 400\\
+TI-16 & Plikowa baza i seed (R7) & nowy katalog tymczasowy, dwukrotny seed & tryb WAL; produkty zasiane, drugi seed nie dubluje danych\\
+\end{przypadki}
+
+% -------------------------------------------------------------------------
+\section{Dane do testów integracyjnych}
+
+\subsection{Zestaw danych}
+{\small
+\begin{xltabular}{\textwidth}{@{}l L L@{}}
+\toprule
+\textsf{\textbf{Kategoria}} & \textsf{\textbf{Dane}} & \textsf{\textbf{Uzasadnienie}}\\
+\midrule
+\endfirsthead
+\toprule
+\textsf{\textbf{Kategoria}} & \textsf{\textbf{Dane}} & \textsf{\textbf{Uzasadnienie}}\\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+Baza & SQLite \code{:memory:} ze schematem produkcyjnym i 20 popularnymi produktami & każdy test zaczyna od czystego stanu; ten sam schemat i te same ograniczenia \code{CHECK} co w produkcji\\
+Użytkownicy & Jan \code{jan@example.com} (właściciel), Ania \code{ania@example.com} (współdzielenie), Obcy \code{obcy@example.com} & po jednym przedstawicielu każdej roli z tablicy decyzyjnej uprawnień\\
+Hasło & \code{haslo1234} (9 znaków) & minimalnie powyżej granicy 8 znaków; poprawne dla walidatora\\
+Wielkość liter & \code{Jan@example.com} & sprawdza normalizację e-maila przy unikalności konta\\
+Listy & \code{Zakupy na piątek}, data 2026-10-16; \code{Na dziś} bez daty & obie klasy: lista z datą i bez daty\\
+Pozycje & \code{mleko} 2~l, \code{woda} 6~szt, \code{ser} 1~opak, \code{chleb} 1~szt & produkty z katalogu i różne jednostki, w tym niedomyślne\\
+Zdjęcie & PNG 1$\times$1 piksel, 70~B & najmniejszy poprawny plik; szybkie testy i porównanie bajt w bajt\\
+Wartości brzegowe & zdjęcie 2~MB + 1~B; ciało 3~MB + 1~B & pierwszy bajt ponad limit zdjęcia i limit ciała żądania\\
+Złe dane & ciało \code{null}, JSON \code{\{}, nieznany e-mail, nieznane ID listy & ścieżki błędów, które klient może wywołać\\
+Proxy & \code{X-Forwarded-For: 10.0.0.8, 10.0.0.1}, limit logowań 1 & pokazuje, od czego zależy klucz limitu\\
+\end{xltabular}
+\vspace{-1.2em}\captionof{table}{Dane do testów integracyjnych}}
+
+\subsection{Dlaczego taki zestaw}
+\begin{itemize}
+  \item \textbf{Izolacja i powtarzalność.} Baza w pamięci powstaje dla każdego testu, więc
+        kolejność wykonania nie ma znaczenia, a cały zestaw trwa około 3~s.
+  \item \textbf{Prawdziwy silnik zamiast atrapy.} Zapytania SQL, klucze obce
+        i \code{ON DELETE CASCADE} wykonuje SQLite, więc test TI-06 sprawdza rzeczywiste
+        zachowanie bazy, a nie założenie o nim.
+  \item \textbf{Pokrycie ról.} Trzy konta odpowiadają trzem kolumnom tablicy decyzyjnej;
+        mniej kont nie pozwoliłoby odróżnić odpowiedzi 403 od 404.
+  \item \textbf{Wartości brzegowe zamiast losowych.} Pliki i ciała żądań są o jeden bajt
+        większe od limitu, bo tam najczęściej powstają błędy typu \enquote{off by one}.
+  \item \textbf{Czytelność.} Polskie nazwy produktów z katalogu odpowiadają realnemu użyciu
+        aplikacji i ułatwiają analizę nieudanego testu.
+\end{itemize}
+
+% -------------------------------------------------------------------------
+\section{Testy systemowe — przypadki testowe}
+
+Testy systemowe uruchamiają rzeczywiste API i serwer frontendu, a następnie sterują
+przeglądarką Chromium jak użytkownik. Scenariusz TS-02 używa dwóch niezależnych kontekstów
+przeglądarki, czyli dwóch osobnych sesji.
+
+\begin{przypadki}
+TS-01 & Logowanie istniejącym kontem (R1) & Ola, \code{login.<znacznik czasu>@example.com}, \code{haslo1234} & po rejestracji i wylogowaniu ponowne logowanie otwiera stronę list\\
+TS-02 & Właściciel zarządza listą, osoba ze współdzielenia zmienia tylko status (R1–R7) & Jan i Ania z unikalnymi adresami; lista \code{Zakupy na piątek}, 2026-10-16; \code{mleko} 2~l z \code{pixel.png} & kroki i oczekiwane wyniki w tabeli~\ref{tab:ts02}\\
+TS-03 & Weryfikacja ręczna w przeglądarce (R1–R5, R7) & konto \code{laboratorium@example.com}; lista \code{Zakupy na piątek} wybrana kalendarzem; \code{mleko} 2~l & rejestracja, lista z datą, przekreślenie, stan 1/1 po odświeżeniu; \code{/lists} po wylogowaniu przekierowuje na logowanie\\
+\end{przypadki}
+
+\begin{table}[H]
+\centering\footnotesize
+\begin{tabularx}{\textwidth}{@{}r l L L@{}}
+\toprule
+\textsf{\textbf{Krok}} & \textsf{\textbf{Kto}} & \textsf{\textbf{Działanie}} & \textsf{\textbf{Oczekiwany wynik}}\\
+\midrule
+1 & Ania, Jan & rejestracja w osobnych kontekstach & obie osoby widzą stronę list\\
+2 & Jan & nowa lista, otwarcie kalendarza, data 2026-10-16 & kalendarz widoczny; tytuł \code{Zakupy na piątek}\\
+3 & Jan & pozycja \code{mleko}, ilość 2, jednostka \code{l}, zdjęcie & pozycja z miniaturą zdjęcia\\
+4 & Jan & odhaczenie pozycji & etykieta przekreślona (\code{line-through})\\
+5 & Jan & zmiana nazwy na \code{Zakupy na sobotę} & nowy tytuł\\
+6 & Jan & udostępnienie Ani po e-mailu & adres Ani na liście udostępnień\\
+7 & Ania & otwarcie udostępnionej listy & notka o prawach; brak formularza dodawania i przycisku usuwania\\
+8 & Ania & zmiana statusu pozycji & przekreślenie znika\\
+9 & Jan & odświeżenie strony & widzi zmianę Ani: pozycja nieprzekreślona\\
+10 & Jan & usunięcie pozycji z potwierdzeniem & lista bez pozycji\\
+11 & Jan & usunięcie listy z potwierdzeniem & powrót do list; listy \code{Zakupy na sobotę} brak\\
+\bottomrule
+\end{tabularx}
+\caption{Kroki scenariusza TS-02}
+\label{tab:ts02}
+\end{table}
+
+% -------------------------------------------------------------------------
+\section{Dane do testów systemowych}
+
+{\small
+\begin{xltabular}{\textwidth}{@{}l L L@{}}
+\toprule
+\textsf{\textbf{Kategoria}} & \textsf{\textbf{Dane}} & \textsf{\textbf{Uzasadnienie}}\\
+\midrule
+\endfirsthead
+\toprule
+\textsf{\textbf{Kategoria}} & \textsf{\textbf{Dane}} & \textsf{\textbf{Uzasadnienie}}\\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+Baza & \code{e2e.sqlite} usuwany przez \code{global-setup.ts} przed przebiegiem & start z czystą bazą, bez danych z poprzednich uruchomień\\
+Konta & \code{jan.<czas>@}, \code{ania.<czas>@}, \code{login.<czas>@example.com} & unikalne adresy pozwalają uruchamiać testy wielokrotnie bez konfliktu 409\\
+Hasło & \code{haslo1234} & poprawne według reguły 8 znaków, takie samo jak w testach integracyjnych\\
+Lista & \code{Zakupy na piątek} $\rightarrow$ \code{Zakupy na sobotę}, data 2026-10-16 & polskie znaki diakrytyczne sprawdzają kodowanie w całym łańcuchu; zmiana nazwy sprawdza edycję\\
+Pozycja & \code{mleko}, 2, \code{l} & produkt z katalogu podpowiedzi; jednostka inna niż domyślna \code{szt} wymusza użycie listy rozwijanej\\
+Zdjęcie & \code{fixtures/pixel.png}, 70~B & ścieżka przesłania pliku przez formularz bez spowalniania testu\\
+Dwie sesje & dwa konteksty Playwright & jedyny sposób, by w jednym teście zobaczyć prawa obu ról i propagację zmian\\
+\end{xltabular}
+\vspace{-1.2em}\captionof{table}{Dane do testów systemowych}}
+
+Dane odwzorowują typowe użycie aplikacji: jedna osoba planuje zakupy, druga odhacza
+produkty w sklepie. Wybrano najkrótszą ścieżkę, która przechodzi przez każde wymaganie
+funkcjonalne R1–R7. Przypadki brzegowe i błędne zostały sprawdzone niżej w piramidzie,
+gdzie są szybsze i stabilniejsze.
+
+% -------------------------------------------------------------------------
+\section{Testy wydajnościowe — przypadki testowe}
+
+\subsection{Model obciążenia}
+Każdy scenariusz k6 loguje się raz w fazie \code{setup}, a następnie w pętli wykonuje
+\code{GET /api/lists} oraz \code{PATCH /api/items/:id/status}. Osobna grupa wirtualnych
+użytkowników (VU) loguje się cyklicznie, bo logowanie liczy skrót bcrypt i jest najdroższą
+operacją API. Skrypt \code{tests/perf/run.sh} uruchamia API na porcie 3099 na nowej bazie,
+seeduje dane, wykonuje trzy scenariusze i zatrzymuje serwer.
+
+\begin{przypadki}
+TW-01 & Smoke — czy system działa pod minimalnym ruchem (R8) & 1 VU przez 10~s; przerwa 0,2~s & p95 < 300~ms; błędy < 1\%; wszystkie sprawdzenia 200\\
+TW-02 & Load — typowe obciążenie (R8) & 8 VU przegląda i odhacza, 2 VU loguje się; 20~s & jak wyżej\\
+TW-03 & Stress — rosnące obciążenie (R8) & przegląd: 0 $\rightarrow$ 15 $\rightarrow$ 30 $\rightarrow$ 0 VU; logowanie: 0 $\rightarrow$ 4 $\rightarrow$ 0 VU; 25~s & jak wyżej\\
+\end{przypadki}
+
+\subsection{Dane}
+Seed \code{tests/perf/seed.mjs} tworzy konto \code{perf@example.com} oraz 5 list po 10 pozycji,
+razem 50 pozycji. Odpowiedź \code{GET /api/lists} zawiera więc liczniki wyliczane zapytaniem
+agregującym na realnej liczbie wierszy. Limit logowań w tym środowisku podniesiono do 100\,000
+na minutę. Przy domyślnych 10 próbach na minutę scenariusze mierzyłyby odpowiedzi 429
+zamiast wydajności.
+
+% -------------------------------------------------------------------------
+\section{Audyt bezpieczeństwa — plan}
+
+\subsection{Zakres i metody}
+Audyt obejmuje API i zależności projektu. Wykorzystuje cztery metody:
+\begin{enumerate}
+  \item \textbf{testy automatyczne ataków} (Vitest, przypadki TB-01–TB-07);
+  \item \textbf{audyt zależności} \code{pnpm audit --audit-level=high};
+  \item \textbf{skan pasywny DAST} OWASP ZAP baseline na działającym API;
+  \item \textbf{przegląd kodu} pod kątem OWASP Top 10 (2021).
+\end{enumerate}
+
+\begin{przypadki}
+TB-01 & Nagłówki ochronne i flagi ciasteczka & \code{/api/health}; rejestracja przy \code{secureCookies} & \code{X-Content-Type-Options: nosniff}, \code{X-Frame-Options: SAMEORIGIN}; ciasteczko \code{HttpOnly}, \code{SameSite=Lax}, \code{Secure}\\
+TB-02 & Dostęp bez sesji & \code{/api/lists}, \code{/api/auth/me}, \code{/api/popular-products} & 401 dla każdego\\
+TB-03 & Zgadywanie hasła & 4 próby ze złym hasłem przy limicie 3 & 3 razy 401, czwarta 429\\
+TB-04 & Wstrzyknięcie SQL & nazwa listy \code{'; DROP TABLE lists; --}; e-mail \code{jan@example.com' OR '1'='1} & nazwa zapisana jako tekst; logowanie 400; tabela i konto nienaruszone\\
+TB-05 & XSS zapisany w danych & nazwa pozycji \code{<img src=x onerror=alert(1)>} & odpowiedź JSON, wartość bez zmian, brak dokumentu HTML\\
+TB-06 & IDOR — cudze zasoby & Obcy pyta o listę, zdjęcie i status pozycji Jana & 404 dla każdego; właściciel dalej ma dostęp\\
+TB-07 & Złośliwe przesłanie pliku & \code{text/html}; tekst udający PNG; PNG 2~MB + 1~B & 400 dla każdego; komunikat o limicie 2~MB\\
+\end{przypadki}
+
+\subsection{Przegląd kodu — lista kontrolna}
+\begin{table}[H]
+\centering\small
+\begin{tabularx}{\textwidth}{@{}l L l@{}}
+\toprule
+\textsf{\textbf{Kategoria OWASP}} & \textsf{\textbf{Co jest sprawdzane}} & \textsf{\textbf{Metoda}}\\
+\midrule
+A01 Broken Access Control & kontrola roli przy każdej operacji, 404 dla obcych & TB-06, TI-08, TI-09, przegląd\\
+A02 Cryptographic Failures & bcrypt, losowość tokenu sesji, przechowywanie tokenu & przegląd\\
+A03 Injection & zapytania parametryzowane, odpowiedzi JSON & TB-04, TB-05, przegląd\\
+A04 Insecure Design & limit prób logowania, jego klucz i zasięg & TB-03, TI-12, przegląd\\
+A05 Security Misconfiguration & nagłówki, cache, ujawnianie błędów & TB-01, TI-13, ZAP\\
+A06 Vulnerable Components & znane podatności zależności & \code{pnpm audit}\\
+A07 Identification and Authentication Failures & sesje, wylogowanie, komunikaty logowania & TB-02, TI-01, TI-02\\
+A08 Software and Data Integrity & weryfikacja treści plików, polityka łańcucha dostaw & TB-07, przegląd\\
+A09 Logging and Monitoring & rejestrowanie zdarzeń bezpieczeństwa & przegląd\\
+A10 SSRF & wychodzące żądania serwera & przegląd (brak takich żądań)\\
+\bottomrule
+\end{tabularx}
+\caption{Lista kontrolna przeglądu kodu}
+\end{table}
+
+% =========================================================================
+\part{Raport z testów}
+% =========================================================================
+
+\section{Podsumowanie wykonania}
+
+Wszystkie testy wykonano 12 października 2026 w środowisku z rozdziału~2.
+
+\begin{table}[H]
+\centering\small
+\begin{tabularx}{\textwidth}{@{}l r r r r L@{}}
+\toprule
+\textsf{\textbf{Poziom}} & \textsf{\textbf{Przypadki}} & \textsf{\textbf{Zal.}} & \textsf{\textbf{Niezal.}} & \textsf{\textbf{Czas}} & \textsf{\textbf{Wynik}}\\
+\midrule
+Jednostkowe — backend & 14 & 14 & 0 & \multirow{2}{*}{5,8 s\textsuperscript{a}} & \zal\\
+Integracyjne & 16 & 16 & 0 & & \zal\\
+Jednostkowe — frontend & 35 & 35 & 0 & 6,1 s & \zal\\
+Systemowe (automatyczne) & 2 & 2 & 0 & 4,7 s & \zal\\
+Systemowe (ręczne) & 1 & 1 & 0 & — & \zal\ po poprawce D5\\
+Wydajnościowe & 3 & 3 & 0 & 57 s & \zal\\
+Bezpieczeństwa (Vitest) & 7 & 7 & 0 & 1,0 s & \zal\\
+\code{pnpm audit} & 1 & 1 & 0 & < 1 s & \zal: 0 podatności\\
+OWASP ZAP baseline & 67 reguł & 66 & 0 FAIL & ok. 2 min & \zal: 1 ostrzeżenie\\
+\midrule
+\textbf{Razem testy} & \textbf{78} & \textbf{78} & \textbf{0} & & \zal\\
+\bottomrule
+\end{tabularx}
+\par\smallskip
+\raggedright\footnotesize\textsuperscript{a} Testy jednostkowe backendu i integracyjne wykonują się razem w przebiegu z pomiarem pokrycia.
+\caption{Zbiorcze wyniki}
+\end{table}
+
+\begin{werdykt}[Werdykt]
+Aplikacja spełnia wszystkie kryteria wyjścia z rozdziału~3. Wymagania funkcjonalne R1–R7
+są potwierdzone na trzech poziomach testów, a wymaganie R8 przy obciążeniu do 34
+wirtualnych użytkowników. Przegląd kodu wykazał dwa ustalenia o wadze średniej (B1, B2),
+które należy usunąć przed wdrożeniem produkcyjnym.
+\end{werdykt}
+
+% -------------------------------------------------------------------------
+\section{Wyniki testów jednostkowych i integracyjnych}
+
+\subsection{Wykonanie}
+Wszystkie 65 przypadków TJ-01–TJ-49 i TI-01–TI-16 zakończyło się wynikiem pozytywnym
+(30 testów w 10 plikach dla API, 35 testów w 12 plikach dla frontu).
+
+\subsection{Pokrycie kodu}
+Pokrycie mierzono narzędziem V8. Progi są zapisane w konfiguracji Vitest obu pakietów,
+więc spadek poniżej nich kończy \code{pnpm test:unit} błędem. Poza pomiarem pozostają tylko
+pliki startowe procesu: \code{index.ts} w API i \code{main.tsx} we froncie.
+
+\begin{table}[H]
+\centering\small
+\begin{tabular}{@{}l rrrr rrrr@{}}
+\toprule
+& \multicolumn{4}{c}{\textsf{\textbf{API}}} & \multicolumn{4}{c}{\textsf{\textbf{Front}}}\\
+\cmidrule(lr){2-5}\cmidrule(l){6-9}
+& instr. & gał. & funk. & linie & instr. & gał. & funk. & linie\\
+\midrule
+Przed uzupełnieniem testów\textsuperscript{b} & 80,0 & 62,9 & 81,3 & 84,0 & 18,9 & 20,3 & 18,8 & 19,1\\
+\textbf{Po uzupełnieniu} & \textbf{95,8} & \textbf{89,1} & \textbf{95,8} & \textbf{99,1} & \textbf{97,0} & \textbf{82,2} & \textbf{96,1} & \textbf{97,7}\\
+Próg & 90 & 85 & 90 & 95 & 90 & 80 & 90 & 90\\
+\bottomrule
+\end{tabular}
+\par\smallskip
+\raggedright\footnotesize\textsuperscript{b} Pierwszy pomiar obejmował również pliki startowe, więc wartości są nieco zaniżone.
+\caption{Pokrycie kodu w procentach}
+\end{table}
+
+\begin{center}
+\begin{tikzpicture}
+\begin{axis}[
+  ybar=3pt, bar width=14pt, width=0.95\textwidth, height=5.4cm,
+  ymin=0, ymax=112, ytick={0,25,50,75,100}, ylabel={\% pokrycia},
+  symbolic x coords={API instr.,API gał.,Front instr.,Front gał.},
+  xtick=data, enlarge x limits=0.18,
+  legend style={at={(0.5,1.04)},anchor=south,legend columns=2,draw=none},
+  tick label style={font=\small}, label style={font=\small},
+  nodes near coords, every node near coord/.append style={font=\scriptsize},
+  nodes near coords style={/pgf/number format/.cd,fixed,precision=1,use comma},
+  axis line style={draw=muted}, major grid style={draw=muted!25}, ymajorgrids]
+\addplot[fill=muted!40,draw=muted] coordinates {(API instr.,80.0) (API gał.,62.9) (Front instr.,18.9) (Front gał.,20.3)};
+\addplot[fill=accent,draw=accent] coordinates {(API instr.,95.8) (API gał.,89.1) (Front instr.,97.0) (Front gał.,82.2)};
+\legend{przed, po}
+\end{axis}
+\end{tikzpicture}
+\end{center}
+
+\subsection{Obszary o słabszym pokryciu}
+\begin{itemize}
+  \item \code{AuthProvider.tsx}, 62,5\% gałęzi: nie jest sprawdzone odmontowanie komponentu
+        przed odpowiedzią \code{/api/auth/me}.
+  \item \code{ListDetailPage.tsx}, 75,6\% gałęzi: w oknie edycji pozycji nie są zmieniane
+        pola ilości i jednostki, wysyłane są tylko istniejące wartości.
+  \item \code{apps/api/src/http.ts}, 60\% gałęzi: brak przypadku, w którym błąd walidacji
+        nie ma komunikatu.
+\end{itemize}
+
+% -------------------------------------------------------------------------
+\section{Wyniki testów systemowych}
+
+\begin{table}[H]
+\centering\small
+\begin{tabularx}{\textwidth}{@{}l L r l@{}}
+\toprule
+\textsf{\textbf{ID}} & \textsf{\textbf{Przypadek}} & \textsf{\textbf{Czas}} & \textsf{\textbf{Wynik}}\\
+\midrule
+TS-01 & Logowanie istniejącym kontem & 0,8 s & \zal\\
+TS-02 & Właściciel zarządza listą, osoba ze współdzielenia zmienia tylko status & 2,6 s & \zal\\
+TS-03 & Weryfikacja ręczna w przeglądarce & — & \zal\ po poprawce D5\\
+\bottomrule
+\end{tabularx}
+\caption{Wyniki testów systemowych}
+\end{table}
+
+Weryfikacja ręczna wykryła błąd użyteczności D5: kalendarz wyboru daty zostawał otwarty
+po wybraniu dnia i zasłaniał przycisk \enquote{Utwórz}. Po poprawce kalendarz zamyka się
+po wyborze, a scenariusz przeszedł w całości, łącznie z utrwaleniem stanu 1/1 po odświeżeniu
+strony.
+
+% -------------------------------------------------------------------------
+\section{Wyniki testów wydajnościowych}
+
+\begin{table}[H]
+\centering\small
+\begin{tabular}{@{}l rrr@{}}
+\toprule
+\textsf{\textbf{Miara}} & \textsf{\textbf{TW-01 smoke}} & \textsf{\textbf{TW-02 load}} & \textsf{\textbf{TW-03 stress}}\\
+\midrule
+Wirtualni użytkownicy (maks.) & 1 & 10 & 34\\
+Iteracje & 38 & 787 & 2\,985\\
+Żądania HTTP & 115 & 1\,465 & 5\,712\\
+Przepustowość [żądania/s] & 11,25 & 72,66 & 225,85\\
+Średni czas [ms] & 22,36 & 21,61 & 19,62\\
+Mediana [ms] & 2,18 & 3,84 & 9,21\\
+p90 [ms] & 64,00 & 61,34 & 56,18\\
+\textbf{p95 [ms]} (próg 300) & \textbf{65,91} & \textbf{64,16} & \textbf{61,64}\\
+Maksimum [ms] & 70,58 & 119,08 & 161,22\\
+Błędy HTTP (próg 1\%) & 0,00\% & 0,00\% & 0,00\%\\
+Sprawdzenia zaliczone & 114/114 & 1\,464/1\,464 & 5\,711/5\,711\\
+\midrule
+Wynik & \zal & \zal & \zal\\
+\bottomrule
+\end{tabular}
+\caption{Wyniki testów wydajnościowych k6}
+\end{table}
+
+\begin{center}
+\begin{tikzpicture}
+\begin{axis}[
+  ybar=3pt, bar width=14pt, width=0.95\textwidth, height=5.8cm,
+  ymin=0, ymax=340, ytick={0,100,200,300}, ylabel={czas odpowiedzi [ms]},
+  symbolic x coords={smoke,load,stress}, xtick=data, enlarge x limits=0.22,
+  legend style={at={(0.5,1.04)},anchor=south,legend columns=3,draw=none},
+  tick label style={font=\small}, label style={font=\small},
+  nodes near coords, every node near coord/.append style={font=\scriptsize},
+  nodes near coords style={/pgf/number format/.cd,fixed,precision=0},
+  axis line style={draw=muted}, major grid style={draw=muted!25}, ymajorgrids]
+\draw[bad,dashed,thick] ({rel axis cs:0,0}|-{axis cs:smoke,300}) -- ({rel axis cs:1,0}|-{axis cs:smoke,300})
+  node[pos=0.98,above left,font=\scriptsize,text=bad] {próg p95 = 300 ms};
+\addplot[fill=accent!35,draw=accent] coordinates {(smoke,22.36) (load,21.61) (stress,19.62)};
+\addplot[fill=accent,draw=accent] coordinates {(smoke,65.91) (load,64.16) (stress,61.64)};
+\addplot[fill=warn!70,draw=warn] coordinates {(smoke,70.58) (load,119.08) (stress,161.22)};
+\legend{średnia, p95, maksimum}
+\end{axis}
+\end{tikzpicture}
+\end{center}
+
+\subsection{Analiza}
+\begin{itemize}
+  \item Przy 20-krotnym wzroście przepustowości (z 11 do 226 żądań/s) p95 pozostał prawie
+        stały, około 62–66~ms. Próg 300~ms został spełniony z prawie pięciokrotnym zapasem.
+  \item Rośnie tylko ogon rozkładu: maksimum wzrosło z 71 do 161~ms. To pierwszy sygnał
+        kolejkowania żądań przy większej współbieżności.
+  \item Rozkład jest dwumodalny: mediana wynosi 2–9~ms, a p90 już 56–64~ms. Najpewniej
+        szybkie są odczyty i zmiany statusu, a wolne — logowania liczące bcrypt. Obecne progi
+        nie rozdzielają tych operacji, więc hipotezy nie da się potwierdzić z wyników.
+  \item Test obciążeniowy nie znalazł punktu nasycenia: przy 34 VU nie wystąpił żaden błąd.
+  \item Klient k6 i API działały na tej samej maszynie, przez pętlę zwrotną i w trybie
+        deweloperskim (\code{tsx}). Wyniki są optymistyczne względem wdrożenia sieciowego.
+\end{itemize}
+
+% -------------------------------------------------------------------------
+\section{Wyniki audytu bezpieczeństwa}
+
+\subsection{Testy automatyczne i zależności}
+Przypadki TB-01–TB-07 zakończyły się wynikiem pozytywnym. \code{pnpm audit} nie zgłosił
+żadnej znanej podatności. Wcześniej audyt wykrył podatność krytyczną w pakiecie
+\code{tinypool} (zależność Vitest~3) i średnią GHSA-82fw-gwwq-j7x9 w Vitest poniżej 4.1.11.
+Obie usunięto przez aktualizację Vitest do 4.1.11 i nadpisanie wersji \code{tinypool}
+w \code{pnpm-workspace.yaml} (defekt D4).
+
+\subsection{OWASP ZAP baseline}
+Skan ZAP 2.17.0 objął \code{http://127.0.0.1:3000}. Wynik: \textbf{66 reguł zaliczonych,
+1 ostrzeżenie, 0 alertów FAIL}.
+
+\begin{table}[H]
+\centering\small
+\begin{tabularx}{\textwidth}{@{}l L L l@{}}
+\toprule
+\textsf{\textbf{Reguła}} & \textsf{\textbf{Alert}} & \textsf{\textbf{Adresy}} & \textsf{\textbf{Waga}}\\
+\midrule
+10049 & Storable and Cacheable Content & \code{/} i \code{/robots.txt} (odpowiedzi 404) & \niski\\
+\bottomrule
+\end{tabularx}
+\caption{Alerty OWASP ZAP}
+\end{table}
+
+Pająk ZAP znalazł tylko 3 adresy, bo API nie serwuje strony pod \code{/}, a skan był
+nieuwierzytelniony. Wynik potwierdza poprawne nagłówki odpowiedzi publicznych, ale nie
+obejmuje tras za logowaniem ani frontendu.
+
+\subsection{Ustalenia przeglądu kodu}
+\begin{xltabular}{\textwidth}{@{}>{\sffamily\bfseries\color{accent}}l L l@{}}
+\toprule
+\textcolor{black}{ID} & \textsf{\textbf{Ustalenie}} & \textsf{\textbf{Waga}}\\
+\midrule
+\endfirsthead
+\toprule
+\textcolor{black}{ID} & \textsf{\textbf{Ustalenie}} & \textsf{\textbf{Waga}}\\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+B1 & \textbf{Klucz limitu logowań pochodzi z nagłówka \code{X-Forwarded-For}}
+     (\code{apps/api/src/middleware/rateLimit.ts}). Nagłówek ustawia klient, więc atakujący
+     omija limit, zmieniając jego wartość przy każdej próbie. Bez nagłówka wszyscy klienci
+     trafiają do wspólnego koszyka \code{local}, więc jeden atakujący może zablokować
+     logowanie wszystkim użytkownikom. TI-12 potwierdza, że o kluczu decyduje nagłówek. & \sredni\\
+B2 & \textbf{Tokeny sesji są przechowywane jawnie.} Token jest kluczem tabeli \code{sessions}.
+     Wyciek pliku bazy pozwala przejąć każdą aktywną sesję na okres do 7 dni. & \sredni\\
+B3 & \textbf{Brak \code{Cache-Control: no-store} w odpowiedziach JSON} (alert ZAP 10049).
+     Pośrednie bufory mogą przechowywać odpowiedzi API. & \niski\\
+B4 & \textbf{Brak rejestrowania zdarzeń bezpieczeństwa} (OWASP A09). Nieudane logowania,
+     odpowiedzi 403 i 429 nie trafiają do dziennika, więc atak nie zostawia śladu. & \niski\\
+B5 & \textbf{Limit logowań jest trzymany w pamięci procesu.} Resetuje się przy restarcie
+     i nie działa wspólnie dla kilku instancji. & \niski\\
+B6 & \textbf{Ochrona przed CSRF opiera się wyłącznie na \code{SameSite=Lax}.} API odczytuje
+     JSON bez sprawdzania nagłówka \code{Content-Type}. Atak z tej samej witryny
+     (np. z subdomeny) nie byłby zablokowany. & \info\\
+B7 & \textbf{Ograniczony zasięg DAST}: 3 adresy, bez sesji i bez frontendu. & \info\\
+B8 & \textbf{Polityka haseł}: minimum 8 znaków, bcrypt z kosztem 10, bez sprawdzania haseł
+     z wycieków. & \info\\
+\end{xltabular}
+
+\subsection{Mechanizmy ocenione pozytywnie}
+\begin{itemize}
+  \item wszystkie zapytania SQL są parametryzowane; TB-04 potwierdza brak wstrzyknięcia;
+  \item hasła haszowane bcrypt; ten sam komunikat i porównanie z fikcyjnym skrótem dla
+        nieznanego konta ograniczają wyliczanie kont (TI-02);
+  \item token sesji ma 256 bitów losowości, ciasteczko \code{HttpOnly}, \code{SameSite=Lax},
+        a w produkcji \code{Secure};
+  \item cudze zasoby zwracają 404, więc nie da się sprawdzić istnienia listy (TB-06);
+  \item przesłane pliki są sprawdzane po typie, rozmiarze i sygnaturze bajtowej (TB-07);
+  \item limit ciała żądania 3~MB i ogólny komunikat przy błędzie 500 (TI-13);
+  \item lockfile przechodzi politykę łańcucha dostaw pnpm, a audyt zależności jest czysty.
+\end{itemize}
+
+% -------------------------------------------------------------------------
+\section{Defekty wykryte w trakcie testów}
+
+\begin{table}[H]
+\centering\footnotesize
+\begin{tabularx}{\textwidth}{@{}>{\sffamily\bfseries\color{accent}}l l L L@{}}
+\toprule
+\textcolor{black}{ID} & \textsf{\textbf{Wykrył}} & \textsf{\textbf{Opis}} & \textsf{\textbf{Rozwiązanie}}\\
+\midrule
+D1 & testy integracyjne & błędne ścieżki importu (\code{../} zamiast \code{./}) w \code{context.ts}, \code{http.ts}, \code{uploads.ts}; API nie startowało & poprawione ścieżki\\
+D2 & kontrola typów & jednostka pozycji miała typ \code{string} zamiast listy dozwolonych wartości & schemat \code{z.enum(UNITS)}\\
+D3 & testy komponentów & DOM przenikał między testami; brak \code{ResizeObserver} w jsdom & sprzątanie po teście i atrapy w \code{setup.ts}\\
+D4 & \code{pnpm audit} & podatność krytyczna w \code{tinypool} i średnia w Vitest & Vitest 4.1.11, nadpisanie \code{tinypool}\\
+D5 & test ręczny & kalendarz zostawał otwarty i zasłaniał przycisk \enquote{Utwórz} & zamknięcie kalendarza po wyborze dnia\\
+D6 & przygotowanie testów k6 & limit 10 logowań na minutę uniemożliwiał pomiar & zmienna \code{LOGIN\_RATE\_LIMIT\_MAX} dla środowiska testowego\\
+D7 & przygotowanie skanu ZAP & kontener nie widział API na \code{127.0.0.1} & uruchomienie ZAP w sieci hosta\\
+\bottomrule
+\end{tabularx}
+\caption{Defekty wykryte i usunięte}
+\end{table}
+
+% -------------------------------------------------------------------------
+\section{Wnioski i zalecenia dla zespołu developerskiego}
+
+\subsection{Wnioski}
+\begin{enumerate}
+  \item Funkcjonalność jest kompletna i stabilna: 78 przypadków testowych przechodzi bez
+        błędów, a reguła współdzielenia jest potwierdzona na poziomie domeny, API i przeglądarki.
+  \item Piramida testów działa zgodnie z założeniem: większość defektów (D1–D4) wykryły
+        szybkie testy niższych poziomów, a test ręczny wykrył problem użyteczności (D5),
+        którego nie opisywał żaden test automatyczny.
+  \item Wydajność z dużym zapasem spełnia wymaganie R8 przy badanym obciążeniu. Granica
+        możliwości systemu nie została jeszcze ustalona.
+  \item Najistotniejsze ryzyko bezpieczeństwa leży w konfiguracji limitu logowań (B1),
+        a nie w obsłudze danych wejściowych. Ta jest solidna.
+\end{enumerate}
+
+\subsection{Zalecenia}
+\begin{xltabular}{\textwidth}{@{}>{\sffamily\bfseries\color{accent}}l L l@{}}
+\toprule
+\textcolor{black}{Nr} & \textsf{\textbf{Zalecenie}} & \textsf{\textbf{Priorytet}}\\
+\midrule
+\endfirsthead
+\toprule
+\textcolor{black}{Nr} & \textsf{\textbf{Zalecenie}} & \textsf{\textbf{Priorytet}}\\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+Z1 & Kluczować limit logowań adresem gniazda; \code{X-Forwarded-For} uwzględniać tylko za
+     skonfigurowanym, zaufanym proxy. Dodać drugi limit na konto (e-mail). Dopisać test,
+     w którym zmiana nagłówka nie omija limitu (B1). & \wysoki\\
+Z2 & Zapisywać w bazie skrót SHA-256 tokenu sesji zamiast samego tokenu; przy weryfikacji
+     porównywać skróty (B2). & \sredni\\
+Z3 & Dodać \code{Cache-Control: no-store} do odpowiedzi JSON API, zostawiając obecne
+     ustawienie dla zdjęć (B3). & \sredni\\
+Z4 & Rozszerzyć DAST: uwierzytelniony skan ZAP z sesją testową, \code{zap-api-scan} na
+     podstawie opisu OpenAPI i skan zbudowanego frontendu (B7). & \sredni\\
+Z5 & Uruchamiać testy jednostkowe z progiem pokrycia, integracyjne, bezpieczeństwa i E2E
+     w CI przy każdej zmianie; k6 i ZAP cyklicznie. Zapisywać kolejne cykle TDD jako osobne
+     commity, aby historia pokazywała przejście od czerwonego do zielonego testu. & \sredni\\
+Z6 & Rejestrować nieudane logowania, odpowiedzi 403 i 429 z identyfikatorem konta
+     i adresem (B4). & \niski\\
+Z7 & W k6 dodać progi per operacja (\code{http\_req\_duration\{name:login\}}),
+     test długotrwały (soak) i stress do pierwszych błędów. Mierzyć zbudowane API
+     na osobnej maszynie. & \niski\\
+Z8 & W testach systemowych dodać Firefox i WebKit oraz scenariusze negatywne: złe hasło,
+     wejście obcej osoby na adres cudzej listy. & \niski\\
+Z9 & Podnieść pokrycie gałęzi frontu: odmontowanie \code{AuthProvider}, zmiana ilości
+     i jednostki w oknie edycji pozycji. Usunąć \code{users.findById} i \code{requireToggle}
+     albo użyć ich w kodzie produkcyjnym — dziś wywołują je tylko testy. & \niski\\
+Z10 & Przy skalowaniu przenieść limit prób do współdzielonego magazynu (np. Redis);
+      rozważyć koszt bcrypt 12 i sprawdzanie haseł z wycieków (B5, B8). & \niski\\
+\end{xltabular}
+
+\begin{uwaga}
+\small\textbf{Przed wdrożeniem produkcyjnym} należy wykonać co najmniej zalecenia Z1 i Z2.
+Pozostałe zalecenia poprawiają odporność i zasięg testów, ale nie blokują wydania.
+\end{uwaga}
+
+% -------------------------------------------------------------------------
+\appendix
+\section{Odtworzenie wyników}
+
+\begin{table}[H]
+\centering\small
+\begin{tabularx}{\textwidth}{@{}l L@{}}
+\toprule
+\textsf{\textbf{Polecenie}} & \textsf{\textbf{Działanie}}\\
+\midrule
+\code{pnpm install} & instalacja zależności\\
+\code{pnpm test:unit} & testy jednostkowe i integracyjne z progami pokrycia\\
+\code{pnpm test:integration} & tylko testy integracyjne\\
+\code{pnpm --filter @shopping/e2e install:browsers} & instalacja Chromium dla Playwright\\
+\code{pnpm test:e2e} & testy systemowe\\
+\code{pnpm test:perf} & seed i trzy scenariusze k6 na osobnym API\\
+\code{pnpm test:security} & testy bezpieczeństwa i \code{pnpm audit}\\
+\code{pnpm dev:api}, \code{pnpm test:zap} & API i skan OWASP ZAP baseline\\
+\code{tectonic docs/raport/sprawozdanie.tex} & kompilacja tego dokumentu\\
+\bottomrule
+\end{tabularx}
+\caption{Polecenia}
+\end{table}
+
+\end{document}

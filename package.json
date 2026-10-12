@@ -1,0 +1,22 @@
+{
+  "name": "software-testing-validation",
+  "private": true,
+  "packageManager": "pnpm@12.10.1",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "pnpm --parallel --filter @shopping/api --filter @shopping/web dev",
+    "dev:api": "pnpm --filter @shopping/api dev",
+    "dev:web": "pnpm --filter @shopping/web dev",
+    "build": "pnpm --filter @shopping/api --filter @shopping/web build",
+    "test:unit": "pnpm test:coverage",
+    "test:coverage": "pnpm --filter @shopping/api --filter @shopping/web test:coverage",
+    "test:integration": "pnpm --filter @shopping/api test:integration",
+    "test:e2e": "pnpm --filter @shopping/e2e test",
+    "test:perf": "pnpm --filter @shopping/perf test",
+    "test:security": "pnpm --filter @shopping/security test && pnpm audit --audit-level=high",
+    "test:zap": "pnpm --filter @shopping/security zap",
+    "db:seed": "pnpm --filter @shopping/api db:seed"
+  }
+}
