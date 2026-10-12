@@ -289,7 +289,9 @@ wydajności dostępny k6, dla skanu ZAP działający Docker.
   \item pokrycie kodu nie niższe niż progi zapisane w konfiguracji Vitest:
         API 90\% instrukcji, 85\% gałęzi, 90\% funkcji, 95\% linii;
         front 90\% instrukcji, 80\% gałęzi, 90\% funkcji, 90\% linii;
-  \item w scenariuszach TW: p95 czasu odpowiedzi poniżej 300~ms i odsetek błędów poniżej 1\%;
+  \item w scenariuszach smoke i load: p95 poniżej 300~ms i odsetek błędów poniżej 1\%.
+        Scenariusz stress ma ten próg przekroczyć, przy błędach nadal poniżej 1\%,
+        żeby wskazać granicę obciążenia;
   \item brak podatności o wadze \emph{high} lub \emph{critical} w \code{pnpm audit};
   \item brak alertów typu FAIL w skanie OWASP ZAP baseline.
 \end{enumerate}
@@ -547,7 +549,7 @@ seeduje dane, wykonuje trzy scenariusze i zatrzymuje serwer.
 \begin{przypadki}
 TW-01 & Smoke — czy system działa pod minimalnym ruchem (R8) & 1 VU przez 10~s; przerwa 0,2~s & p95 < 300~ms; błędy < 1\%; wszystkie sprawdzenia 200\\
 TW-02 & Load — typowe obciążenie (R8) & 8 VU przegląda i odhacza, 2 VU loguje się; 20~s & jak wyżej\\
-TW-03 & Stress — rosnące obciążenie (R8) & przegląd: 0 $\rightarrow$ 15 $\rightarrow$ 30 $\rightarrow$ 0 VU; logowanie: 0 $\rightarrow$ 4 $\rightarrow$ 0 VU; 25~s & jak wyżej\\
+TW-03 & Stress — rosnące obciążenie, aż do przekroczenia progu (R8) & przegląd: 0 $\rightarrow$ 20 $\rightarrow$ 35 $\rightarrow$ 40 $\rightarrow$ 0 VU; logowanie: 0 $\rightarrow$ 6 $\rightarrow$ 12 $\rightarrow$ 16 $\rightarrow$ 0 VU; 37~s & p95 powyżej 300~ms; błędy nadal poniżej 1\%; sprawdzenia 200\\
 \end{przypadki}
 
 \subsection{Dane}
@@ -620,12 +622,12 @@ Integracyjne & 16 & 16 & 0 & & \zal\\
 Jednostkowe — frontend & 35 & 35 & 0 & 6,1 s & \zal\\
 Systemowe (automatyczne) & 2 & 2 & 0 & 4,7 s & \zal\\
 Systemowe (ręczne) & 1 & 1 & 0 & — & \zal\ po poprawce D5\\
-Wydajnościowe & 3 & 3 & 0 & 57 s & \zal\\
+Wydajnościowe & 3 & 2 & 1 & 37 s & smoke i load \zal; stress ponad próg\\
 Bezpieczeństwa (Vitest) & 7 & 7 & 0 & 1,0 s & \zal\\
 \code{pnpm audit} & 1 & 1 & 0 & < 1 s & \zal: 0 podatności\\
 OWASP ZAP baseline & 67 reguł & 66 & 0 FAIL & ok. 2 min & \zal: 1 ostrzeżenie\\
 \midrule
-\textbf{Razem testy} & \textbf{78} & \textbf{78} & \textbf{0} & & \zal\\
+\textbf{Razem testy} & \textbf{78} & \textbf{77} & \textbf{1} & & stress ponad próg p95\\
 \bottomrule
 \end{tabularx}
 \par\smallskip
@@ -634,10 +636,11 @@ OWASP ZAP baseline & 67 reguł & 66 & 0 FAIL & ok. 2 min & \zal: 1 ostrzeżenie\
 \end{table}
 
 \begin{werdykt}[Werdykt]
-Aplikacja spełnia wszystkie kryteria wyjścia z rozdziału~3. Wymagania funkcjonalne R1–R7
-są potwierdzone na trzech poziomach testów, a wymaganie R8 przy obciążeniu do 34
-wirtualnych użytkowników. Przegląd kodu wykazał dwa ustalenia o wadze średniej (B1, B2),
-które należy usunąć przed wdrożeniem produkcyjnym.
+Wymagania funkcjonalne R1–R7 są potwierdzone na trzech poziomach testów. Wymaganie R8
+jest spełnione w smoke i load, do 10 wirtualnych użytkowników. Stress przy 56 użytkownikach
+(16 logujących się i 40 przeglądających) przekracza próg: p95 wynosi 653~ms, a błędów HTTP
+nie ma. Przegląd kodu wykazał dwa ustalenia o wadze średniej (B1, B2), które należy usunąć
+przed wdrożeniem produkcyjnym.
 \end{werdykt}
 
 % -------------------------------------------------------------------------
@@ -730,19 +733,19 @@ strony.
 \toprule
 \textsf{\textbf{Miara}} & \textsf{\textbf{TW-01 smoke}} & \textsf{\textbf{TW-02 load}} & \textsf{\textbf{TW-03 stress}}\\
 \midrule
-Wirtualni użytkownicy (maks.) & 1 & 10 & 34\\
-Iteracje & 38 & 787 & 2\,985\\
-Żądania HTTP & 115 & 1\,465 & 5\,712\\
-Przepustowość [żądania/s] & 11,25 & 72,66 & 225,85\\
-Średni czas [ms] & 22,36 & 21,61 & 19,62\\
-Mediana [ms] & 2,18 & 3,84 & 9,21\\
-p90 [ms] & 64,00 & 61,34 & 56,18\\
-\textbf{p95 [ms]} (próg 300) & \textbf{65,91} & \textbf{64,16} & \textbf{61,64}\\
-Maksimum [ms] & 70,58 & 119,08 & 161,22\\
+Wirtualni użytkownicy (maks.) & 1 & 10 & 56\\
+Iteracje & 38 & 787 & 2\,297\\
+Żądania HTTP & 115 & 1\,465 & 4\,043\\
+Przepustowość [żądania/s] & 11,25 & 72,66 & 108,59\\
+Średni czas [ms] & 22,36 & 21,61 & 250,96\\
+Mediana [ms] & 2,18 & 3,84 & 185,08\\
+p90 [ms] & 64,00 & 61,34 & 557,87\\
+\textbf{p95 [ms]} (próg 300) & \textbf{65,91} & \textbf{64,16} & \textbf{653,32}\\
+Maksimum [ms] & 70,58 & 119,08 & 2\,180\\
 Błędy HTTP (próg 1\%) & 0,00\% & 0,00\% & 0,00\%\\
-Sprawdzenia zaliczone & 114/114 & 1\,464/1\,464 & 5\,711/5\,711\\
+Sprawdzenia zaliczone & 114/114 & 1\,464/1\,464 & 4\,042/4\,042\\
 \midrule
-Wynik & \zal & \zal & \zal\\
+Wynik & \zal & \zal & ponad próg\\
 \bottomrule
 \end{tabular}
 \caption{Wyniki testów wydajnościowych k6}
@@ -752,7 +755,7 @@ Wynik & \zal & \zal & \zal\\
 \begin{tikzpicture}
 \begin{axis}[
   ybar=3pt, bar width=14pt, width=0.95\textwidth, height=5.8cm,
-  ymin=0, ymax=340, ytick={0,100,200,300}, ylabel={czas odpowiedzi [ms]},
+  ymin=0, ymax=800, ytick={0,200,400,600,800}, ylabel={czas odpowiedzi [ms]},
   symbolic x coords={smoke,load,stress}, xtick=data, enlarge x limits=0.22,
   legend style={at={(0.5,1.04)},anchor=south,legend columns=3,draw=none},
   tick label style={font=\small}, label style={font=\small},
@@ -761,24 +764,22 @@ Wynik & \zal & \zal & \zal\\
   axis line style={draw=muted}, major grid style={draw=muted!25}, ymajorgrids]
 \draw[bad,dashed,thick] ({rel axis cs:0,0}|-{axis cs:smoke,300}) -- ({rel axis cs:1,0}|-{axis cs:smoke,300})
   node[pos=0.98,above left,font=\scriptsize,text=bad] {próg p95 = 300 ms};
-\addplot[fill=accent!35,draw=accent] coordinates {(smoke,22.36) (load,21.61) (stress,19.62)};
-\addplot[fill=accent,draw=accent] coordinates {(smoke,65.91) (load,64.16) (stress,61.64)};
-\addplot[fill=warn!70,draw=warn] coordinates {(smoke,70.58) (load,119.08) (stress,161.22)};
-\legend{średnia, p95, maksimum}
+\addplot[fill=accent!35,draw=accent] coordinates {(smoke,22.36) (load,21.61) (stress,250.96)};
+\addplot[fill=accent,draw=accent] coordinates {(smoke,65.91) (load,64.16) (stress,653.32)};
+\legend{średnia, p95}
 \end{axis}
 \end{tikzpicture}
 \end{center}
 
 \subsection{Analiza}
 \begin{itemize}
-  \item Przy 20-krotnym wzroście przepustowości (z 11 do 226 żądań/s) p95 pozostał prawie
-        stały, około 62–66~ms. Próg 300~ms został spełniony z prawie pięciokrotnym zapasem.
-  \item Rośnie tylko ogon rozkładu: maksimum wzrosło z 71 do 161~ms. To pierwszy sygnał
-        kolejkowania żądań przy większej współbieżności.
-  \item Rozkład jest dwumodalny: mediana wynosi 2–9~ms, a p90 już 56–64~ms. Najpewniej
-        szybkie są odczyty i zmiany statusu, a wolne — logowania liczące bcrypt. Obecne progi
-        nie rozdzielają tych operacji, więc hipotezy nie da się potwierdzić z wyników.
-  \item Test obciążeniowy nie znalazł punktu nasycenia: przy 34 VU nie wystąpił żaden błąd.
+  \item Smoke i load zostają pod progiem: p95 wynosi 66 i 64~ms. Zapas względem 300~ms
+        jest prawie pięciokrotny przy najwyżej 10 wirtualnych użytkownikach.
+  \item Stress narasta do 16 użytkowników logujących się jednocześnie i 40 przeglądających.
+        p95 całego przebiegu wynosi 653~ms, mediana 185~ms, maksimum 2,18~s. Próg 300~ms
+        jest przekroczony. Błędów HTTP nie ma: ograniczeniem jest czas odpowiedzi, nie dostępność.
+  \item Wolne są logowania, bo bcrypt z kosztem 10 blokuje jedyny wątek procesu. Odczyty
+        i zmiany statusu czekają w tej samej kolejce, więc przy szczycie zwalnia cały ruch.
   \item Klient k6 i API działały na tej samej maszynie, przez pętlę zwrotną i w trybie
         deweloperskim (\code{tsx}). Wyniki są optymistyczne względem wdrożenia sieciowego.
 \end{itemize}
@@ -885,13 +886,14 @@ D7 & przygotowanie skanu ZAP & kontener nie widział API na \code{127.0.0.1} & u
 
 \subsection{Wnioski}
 \begin{enumerate}
-  \item Funkcjonalność jest kompletna i stabilna: 78 przypadków testowych przechodzi bez
-        błędów, a reguła współdzielenia jest potwierdzona na poziomie domeny, API i przeglądarki.
+  \item Funkcjonalność jest kompletna i stabilna: przypadki jednostkowe, integracyjne,
+        systemowe i bezpieczeństwa przechodzą, a reguła współdzielenia jest potwierdzona
+        na poziomie domeny, API i przeglądarki.
   \item Piramida testów działa zgodnie z założeniem: większość defektów (D1–D4) wykryły
         szybkie testy niższych poziomów, a test ręczny wykrył problem użyteczności (D5),
         którego nie opisywał żaden test automatyczny.
-  \item Wydajność z dużym zapasem spełnia wymaganie R8 przy badanym obciążeniu. Granica
-        możliwości systemu nie została jeszcze ustalona.
+  \item Wydajność spełnia wymaganie R8 do 10 wirtualnych użytkowników. Przy 56 użytkownikach,
+        w tym 16 logujących się jednocześnie, p95 przekracza 300~ms (653~ms), nadal bez błędów HTTP.
   \item Najistotniejsze ryzyko bezpieczeństwa leży w konfiguracji limitu logowań (B1),
         a nie w obsłudze danych wejściowych. Ta jest solidna.
 \end{enumerate}

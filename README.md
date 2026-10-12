@@ -89,7 +89,7 @@ pnpm test:e2e
 
 ### Wydajnościowe
 
-k6 ma trzy scenariusze: smoke, load i stress. Każdy obejmuje logowanie, `GET /api/lists` i zmianę statusu pozycji. Próg: p95 poniżej 300 ms i mniej niż 1% błędów.
+k6 ma trzy scenariusze: smoke, load i stress. Każdy obejmuje logowanie, `GET /api/lists` i zmianę statusu pozycji. Próg: p95 poniżej 300 ms i mniej niż 1% błędów. Smoke i load mieszczą się w progu. Stress narasta do 16 użytkowników logujących się jednocześnie i 40 przeglądających. Przy tym obciążeniu p95 przekracza 300 ms, więc ten scenariusz kończy przebieg błędem.
 
 `pnpm test:perf` sam uruchamia API na porcie 3099, podnosi limit logowań (`LOGIN_RATE_LIMIT_MAX`, domyślnie 10 na minutę, w tym przebiegu 100000) i odpala seed oraz wszystkie trzy scenariusze. Osobne scenariusze nadal celują w `http://127.0.0.1:3000`, więc API musi już działać. Adres zmienia `BASE_URL`.
 
